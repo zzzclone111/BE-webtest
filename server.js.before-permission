@@ -157,31 +157,8 @@ async function requireAuth(req, res, next) {
     });
   }
 }
-const ROLE_PERMISSIONS = {
-  admin: [
-    "product.read",
-    "product.create",
-    "product.update",
-    "product.delete",
-  ],
 
-  manager: [
-    "product.read",
-    "product.create",
-    "product.update",
-  ],
-
-  staff: [
-    "product.read",
-    "product.create",
-  ],
-
-  viewer: [
-    "product.read",
-  ],
-};
-
-function requirePermission(permission) {
+function requireRole(role) {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
@@ -189,10 +166,7 @@ function requirePermission(permission) {
       });
     }
 
-    const permissions =
-      ROLE_PERMISSIONS[req.user.role] || [];
-
-    if (!permissions.includes(permission)) {
+    if (req.user.role !== role) {
       return res.status(403).json({
         error: "Bạn không có quyền thực hiện thao tác này",
       });
@@ -494,12 +468,7 @@ app.post("/api/logout", async (req, res) => {
   }
 });
 
-app.get(
-  "/api/products",
-  requireAuth,
-  requirePermission("product.read"),
-  async (req, res) => {
-
+app.get("/api/products", requireAuth, async (req, res) => {
   try {
 
     let page = parseInt(
@@ -654,7 +623,6 @@ app.get(
 app.get(
   "/api/products/:id",
   requireAuth,
-  requirePermission("product.read"),
   async (req, res) => {
 
     try {
@@ -709,7 +677,7 @@ app.get(
 app.post(
   "/api/products",
   requireAuth,
-  requirePermission("product.create"),
+  requireRole("admin"),
   async (req, res) => {
 
     try {
@@ -827,7 +795,7 @@ app.post(
 app.put(
   "/api/products/:id",
   requireAuth,
-  requirePermission("product.update"),
+  requireRole("admin"),
   async (req, res) => {
 
     try {
@@ -953,7 +921,7 @@ app.put(
 app.delete(
   "/api/products/:id",
   requireAuth,
-  requirePermission("product.delete"),
+  requireRole("admin"),
   async (req, res) => {
 
     try {
